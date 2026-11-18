@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thom Joe's Progressive Rummy</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- Sign-in: make a table or join one -->
+<section id="lobby" class="screen">
+  <div class="panel lobby-panel">
+    <h1>Progressive Rummy</h1>
+    <p class="sub">Up to four players, sixteen rounds, lowest score wins.</p>
+    <label for="name">Your name</label>
+    <input id="name" maxlength="20" autocomplete="nickname" placeholder="Tom">
+    <button id="create" class="big">Start a new table</button>
+    <div class="or">or join a table</div>
+    <label for="code">Table code</label>
+    <input id="code" maxlength="4" autocapitalize="characters" placeholder="ABCD">
+    <button id="join" class="big secondary">Join table</button>
+  </div>
+</section>
+
+<!-- Waiting room before the first deal -->
+<section id="waiting" class="screen hidden">
+  <div class="panel lobby-panel">
+    <h1>Table <span id="w-code" class="code"></span></h1>
+    <p class="sub">Others join with this code, or this link:</p>
+    <p id="w-link" class="link"></p>
+    <p id="w-phone" class="sub hidden"></p>
+    <ol id="w-players" class="players"></ol>
+    <div id="w-clock" class="clock" role="timer" aria-live="polite"></div>
+    <p id="w-note" class="sub"></p>
+    <button id="fill-btn" class="big hidden">Deal now, with computer players in the empty seats</button>
+    <button id="start" class="big secondary hidden">Deal now, people only</button>
+    <button id="w-exit" class="big exit">Leave this table</button>
+  </div>
+</section>
+
+<!-- The game -->
+<section id="game" class="screen hidden">
+  <header class="topbar">
+    <div class="round-title"><span id="g-round"></span></div>
+    <div id="turn-order" class="turn-order" aria-label="Turn order"></div>
+    <div class="top-buttons">
+      <button id="speed-btn" class="small secondary" aria-pressed="false" title="Give the computer players more time between moves">Computers: normal speed</button>
+      <button id="sound-btn" class="small secondary" aria-pressed="true">Sound on</button>
+      <button id="scores-btn" class="small">Scores</button>
+      <button id="exit-btn" class="small exit" title="Leave this game without closing the browser">Exit game</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <main class="table-area">
+      <div class="felt" id="felt">
+        <!-- Update 2: Tom's own table picture. The crown and gold rings sit under the piles,
+             and the four card suits from the corners of his picture sit in the table's corners. -->
+        <div class="table-art-clip" id="table-art-clip" aria-hidden="true">
+          <div class="table-art" id="table-art"></div>
+          <div class="table-corner tl"></div><div class="table-corner tr"></div>
+          <div class="table-corner bl"></div><div class="table-corner br"></div>
+        </div>
+        <div class="spot top" data-pos="top"><div class="plate"></div><div class="zone"></div></div>
+        <div class="spot left" data-pos="left"><div class="plate"></div><div class="zone"></div></div>
+        <div class="spot right" data-pos="right"><div class="plate"></div><div class="zone"></div></div>
+
+        <div class="center">
+          <div class="disc" id="disc">
+          <div class="piles">
+            <div class="pile">
+              <button id="stock" class="card back" aria-label="Draw from the pile"></button>
+              <span id="stock-count" class="pile-label"></span>
+            </div>
+            <div class="pile">
+              <div id="discard"></div>
+              <span id="discard-label" class="pile-label">Discard pile</span>
+            </div>
+          </div>
+          </div>
+          <div id="turn-banner" class="turn-banner" role="status" aria-live="polite"></div>
+          <ol id="steps" class="steps" aria-label="Steps of your turn">
+            <li data-step="draw"><b>1</b> Draw</li>
+            <li data-step="play"><b>2</b> Lay down or add <small>(if you can)</small></li>
+            <li data-step="discard"><b>3</b> Discard one</li>
+          </ol>
+        </div>
+
+        <div class="spot bottom mine" data-pos="bottom"><div class="zone"></div></div>
+      </div>
+
+      <section class="rack" id="rack" aria-label="Your card holder">
+        <div id="me-head" class="plate me-plate"></div>
+        <!-- Update 3: the round's goal sits with your cards, beside (or under) your name. -->
+        <div class="goal-plaque my-goal" id="goal-plaque" role="note" aria-label="This round's goal">
+          <div class="goal-round" id="goal-round"></div>
+          <div class="goal-text" id="goal-text"></div>
+          <div class="goal-sub" id="goal-sub"></div>
+        </div>
+        <p id="status" class="status" aria-live="polite"></p>
+        <div id="hand" class="hand holder" aria-label="Your card holder, a top row and a bottom row. Only you can see how you arrange it."></div>
+        <div class="action-bar">
+          <div id="actions" class="actions"></div>
+          <div class="actions small-row">
+            <button id="sort-btn" class="small secondary">Sort by rank</button>
+            <button id="clear-btn" class="small secondary">Clear picked cards</button>
+            <button id="up-btn" class="small secondary" title="Move your picked cards up to the top row of your holder">&#9650; Up a row</button>
+            <button id="down-btn" class="small secondary" title="Move your picked cards down to the bottom row of your holder">&#9660; Down a row</button>
+            <button id="group-btn" class="small secondary" title="Put your picked cards in their own group to plan a set or run. Only you see your groups. You can also drag cards (on a phone, press and hold a card first).">Make a group</button>
+            <button id="left-btn" class="small secondary arrow hidden" aria-label="Move picked card left" title="Move picked card left">&#9664;</button>
+            <button id="right-btn" class="small secondary arrow hidden" aria-label="Move picked card right" title="Move picked card right">&#9654;</button>
+            <button id="ungroup-btn" class="small secondary hidden">Break up all groups</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside id="scoreboard" class="scoreboard">
+      <h2>Scores <span class="hint">lowest wins</span></h2>
+      <table id="score-table"></table>
+      <h3>What happened <span class="hint">newest at the top</span></h3>
+      <ul id="log" class="log"></ul>
+      <div class="table-rules">
+        <label><input type="checkbox" id="rule-discard"> After laying down, players may take the top discard</label>
+        <div id="rule-note" class="hint"></div>
+      </div>
+      <button id="close-scores" class="small secondary only-phone">Close</button>
+    </aside>
+  </div>
+</section>
+
+<!-- End of a round / end of the game -->
+<div id="modal" class="modal hidden">
+  <div class="panel">
+    <h2 id="m-title"></h2>
+    <p id="m-note" class="sub"></p>
+    <table id="m-table" class="m-table"></table>
+    <button id="next-btn" class="big">Deal the next round</button>
+    <button id="m-close" class="big secondary">Look at the table</button>
+  </div>
+</div>
+
+<!-- Fifth edition, update 1: leaving the game -->
+<div id="exit-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="exit-title">
+  <div class="panel exit-panel">
+    <h2 id="exit-title">Exit the game?</h2>
+    <p id="exit-note" class="sub"></p>
+    <button id="exit-yes" class="big exit">Yes, exit the game</button>
+    <button id="exit-stay" class="big">No, stay at the table</button>
+  </div>
+</div>
+
+<button id="jump-hand" class="jump-hand hidden" aria-label="Scroll down to your cards"><span id="jump-label">&#9660; Your cards</span><span id="jump-goal" class="jump-goal"></span></button>
+<div id="toast" class="toast hidden" role="alert"></div>
+<div id="conn" class="conn hidden">Reconnecting...</div>
+
+<script src="/static/sound.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
